@@ -1,0 +1,44 @@
+version: '3.8'
+
+services:
+  # User Service
+  user-service:
+    image: user-service:latest
+    build:
+      context: ./services/user-service
+    ports:
+      - "5001:5001"
+    env_file:
+      - ./services/user-service/.env.dev  
+    networks:
+      - api-network
+    deploy:
+      replicas: 3  # Scale service horizontally  
+
+  # Project Service
+  project-service:
+    image: project-service:latest
+    build:
+      context: ./services/project-service
+    container_name: project-service  
+    ports:
+      - "5002:5002"
+    networks:
+      - api-network
+
+  # API Gateway (NGINX)
+  api-gateway:
+    build:
+      context: ./gateway
+    container_name: api-gateway  
+    ports:
+      - "8080:80"
+    depends_on:
+      - user-service
+      - project-service
+    networks:
+      - api-network
+
+networks:
+  api-network:
+    driver: bridge
