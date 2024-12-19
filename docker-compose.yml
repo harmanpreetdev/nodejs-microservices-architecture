@@ -1,28 +1,44 @@
-version: '3.8'
-
 services:
   # User Service
   user-service:
-    image: user-service:latest
     build:
       context: ./services/user-service
+      dockerfile: Dockerfile
+    container_name: user-service
     ports:
       - "5001:5001"
+    depends_on:
+      - rabbitmq
     env_file:
-      - ./services/user-service/.env.dev  
+      - ./services/user-service/.env.dev
     networks:
       - api-network
-    deploy:
-      replicas: 3  # Scale service horizontally  
 
   # Project Service
   project-service:
-    image: project-service:latest
     build:
       context: ./services/project-service
-    container_name: project-service  
+      dockerfile: Dockerfile
+    container_name: project-service
     ports:
       - "5002:5002"
+    depends_on:
+      - rabbitmq
+    networks:
+      - api-network
+
+  # Email Service
+  email-service:
+    build:
+      context: ./services/email-service
+      dockerfile: Dockerfile
+    container_name: email-service
+    ports:
+      - "5003:5003"
+    depends_on:
+      - rabbitmq
+    env_file:
+      - ./services/email-service/.env.dev
     networks:
       - api-network
 
@@ -30,7 +46,8 @@ services:
   api-gateway:
     build:
       context: ./gateway
-    container_name: api-gateway  
+      dockerfile: Dockerfile
+    container_name: api-gateway
     ports:
       - "8080:80"
     depends_on:
@@ -38,6 +55,19 @@ services:
       - project-service
     networks:
       - api-network
+
+  # RabbitMQ Service
+  rabbitmq:
+    image: rabbitmq:management
+    container_name: rabbitmq
+    ports:
+      - "5672:5672"
+      - "15672:15672"
+    networks:
+      - api-network
+    environment:
+      RABBITMQ_DEFAULT_USER: user
+      RABBITMQ_DEFAULT_PASS: password
 
 networks:
   api-network:
