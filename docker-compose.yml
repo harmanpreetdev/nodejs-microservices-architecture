@@ -9,6 +9,7 @@ services:
       - "5001:5001"
     depends_on:
       - rabbitmq
+      - mongodb
     env_file:
       - ./services/user-service/.env.dev
     networks:
@@ -24,6 +25,7 @@ services:
       - "5002:5002"
     depends_on:
       - rabbitmq
+      - mongodb
     networks:
       - api-network
 
@@ -68,6 +70,23 @@ services:
     environment:
       RABBITMQ_DEFAULT_USER: user
       RABBITMQ_DEFAULT_PASS: password
+
+  # MongoDB Service
+  mongodb:
+    image: mongo:latest
+    container_name: mongodb
+    ports:
+      - "27017:27017"
+    networks:
+      - api-network
+    volumes:
+      - mongodb_data:/data/db
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: root
+      MONGO_INITDB_ROOT_PASSWORD: password
+
+volumes:
+  mongodb_data:
 
 networks:
   api-network:

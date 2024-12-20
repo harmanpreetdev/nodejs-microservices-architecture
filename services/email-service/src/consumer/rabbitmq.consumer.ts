@@ -1,26 +1,59 @@
-import amqp from "amqplib";
-import { sendEmail } from "../services/email.service";
+import amqp, { Channel, Connection } from "amqplib";
 import { config } from "../config/config";
+import { sendEmail } from "../services/email.service";
 
-const MAX_RETRIES = 5;
-const RETRY_DELAY = 3000;
+class RabbitMQService {
+  connection: Connection | null;
+  channel: Channel | null;
+  retries: number;
+  MAX_RETRIES: number;
+  RETRY_DELAY: number;
+  constructor() {
+    this.connection = null;
+    this.channel = null;
+    this.retries = 0;
+    this.MAX_RETRIES = 5;
+    this.RETRY_DELAY = 3000;
+  }
 
-export const connectRabbitMQ = async () => {
-  let retries = 0;
+  async connect() {
+    while (this.retries < this.MAX_RETRIES) {
+      try {
+        this.connection = await amqp.connect(config.rabbitmq.url);
+        this.channel = await this.connection.createChannel();
+        await this.channel.assertQueue(config.rabbitmq.queue, {
+          durable: true,
+        });
 
-  while (retries < MAX_RETRIES) {
+        console.log(`Waiting for messages in ${config.rabbitmq.queue}`);
+        this.consumeMessages();
+
+        return;
+      } catch (error) {
+        this.retries++;
+        console.error(
+          `Error connecting to RabbitMQ (Attempt ${this.retries} of ${this.MAX_RETRIES}):`,
+          error
+        );
+
+        if (this.retries >= this.MAX_RETRIES) {
+          console.error("Maximum retry attempts reached. Exiting...");
+          throw new Error(
+            "Failed to connect to RabbitMQ after multiple attempts."
+          );
+        }
+
+        console.log(`Retrying in ${this.RETRY_DELAY / 1000} seconds...`);
+        await new Promise((resolve) => setTimeout(resolve, this.RETRY_DELAY));
+      }
+    }
+  }
+
+  async consumeMessages() {
     try {
-      console.log("Config Rabbitmq Url:", config.rabbitmq.url);
-      const connection = await amqp.connect(config.rabbitmq.url);
-      const channel = await connection.createChannel();
-      await channel.assertQueue(config.rabbitmq.queue, { durable: true });
-
-      console.log(`Waiting for messages in ${config.rabbitmq.queue}`);
-
-      channel.consume(config.rabbitmq.queue, async (msg) => {
+      this.channel?.consume(config.rabbitmq.queue, async (msg) => {
         if (msg) {
           const emailData = JSON.parse(msg.content.toString());
-
           const {
             to,
             subject,
@@ -41,31 +74,27 @@ export const connectRabbitMQ = async () => {
               templateData,
               attachments
             );
-            channel.ack(msg);
+            this.channel?.ack(msg);
           } catch (error) {
             console.error("Error processing email message:", error);
-            channel.nack(msg, false, true);
+            this.channel?.nack(msg, false, true);
           }
         }
       });
-
-      return;
     } catch (error) {
-      retries++;
-      console.error(
-        `Error connecting to RabbitMQ (Attempt ${retries} of ${MAX_RETRIES}):`,
-        error
-      );
-
-      if (retries >= MAX_RETRIES) {
-        console.error("Maximum retry attempts reached. Exiting...");
-        throw new Error(
-          "Failed to connect to RabbitMQ after multiple attempts."
-        );
-      }
-
-      console.log(`Retrying in ${RETRY_DELAY / 1000} seconds...`);
-      await new Promise((resolve) => setTimeout(resolve, RETRY_DELAY));
+      console.error("Error consuming messages:", error);
     }
   }
-};
+
+  async closeConnection() {
+    try {
+      if (this.channel) await this.channel.close();
+      if (this.connection) await this.connection.close();
+      console.log("RabbitMQ connection closed.");
+    } catch (error) {
+      console.error("Error closing RabbitMQ connection:", error);
+    }
+  }
+}
+
+export default RabbitMQService;
