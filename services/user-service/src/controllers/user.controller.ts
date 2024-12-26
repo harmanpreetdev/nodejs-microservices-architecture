@@ -33,8 +33,35 @@ const register = async (req: Request, res: Response): Promise<any> => {
     });
   } catch (error) {
     console.error("Error handling user registration:", error);
+
     res.status(500).send("Failed to process the request.");
   }
 };
 
-export default { register };
+const login = async (req: Request, res: Response): Promise<any> => {
+  const { email, password } = req.body;
+  try {
+    const user = await User.findOne({ email });
+    if (!user) {
+      return res.status(401).json({ msg: "Invalid credentials." });
+    }
+    if (user && !(await user.isPasswordMatch(password))) {
+      return res.status(401).json({ msg: "Invalid credentials." });
+    }
+    const token = user.generateAuthToken();
+    res.status(200).json({
+      msg: "Login successful",
+      user: {
+        id: user._id,
+        name: user.name,
+        email: user.email,
+      },
+      token,
+    });
+  } catch (error) {
+    console.error("Error handling user login:", error);
+    res.status(500).send("Failed to process the request.");
+  }
+};
+
+export default { register, login };

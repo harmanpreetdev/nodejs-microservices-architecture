@@ -26,6 +26,10 @@ services:
     depends_on:
       - rabbitmq
       - mongodb
+    env_file:
+      - ./services/project-service/.env.dev
+    volumes:
+      - ./services/project-service:/app/project-service
     networks:
       - api-network
 

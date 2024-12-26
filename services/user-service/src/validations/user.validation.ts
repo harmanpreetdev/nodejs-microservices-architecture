@@ -10,3 +10,8 @@ export const validateRegistration = [
     .isLength({ min: 8 })
     .withMessage("Password must be at least 8 characters long"),
 ];
+
+export const validateLogin = [
+  body("email").isEmail().withMessage("Invalid email format."),
+  body("password").notEmpty().withMessage("Password is required."),
+];
