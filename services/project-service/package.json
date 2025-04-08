@@ -4,12 +4,14 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "start": "ts-node-dev src/index.ts"
+    "start": "ts-node-dev src/index.ts",
+    "build": "tsc"
   },
   "keywords": [],
   "author": "",
   "license": "ISC",
   "dependencies": {
+    "@shared/utils": "^1.0.0",
     "amqplib": "^0.10.5",
     "archiver": "^7.0.1",
     "cors": "^2.8.5",

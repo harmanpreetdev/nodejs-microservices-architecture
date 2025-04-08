@@ -1,13 +1,29 @@
+# Use a Node.js base image
 FROM node:18-alpine
 
-WORKDIR /app/email-service
+# Set the working directory inside the container
+WORKDIR /app/services/email-service
 
-COPY package*.json ./
+# Copy the monorepo's base configuration
+COPY tsconfig.base.json /app/tsconfig.base.json
 
+# Copy root monorepo package files to install dependencies
+COPY package.json /app/
+
+# Copy the shared code into container
+COPY shared /app/shared
+
+# Copy service-specific package.json for proper dependency scoping
+COPY services/email-service/package.json ./ 
+
+# Copy the entire service source code
+COPY services/email-service/ ./ 
+
+# Install dependencies for the workspace
 RUN npm install
 
-COPY . .
-
+# Expose the service's port
 EXPOSE 5003
 
+# Start the service
 CMD ["npm", "start"]

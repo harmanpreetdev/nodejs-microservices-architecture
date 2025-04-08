@@ -1,0 +1,11 @@
+{
+  "name": "micro-services",
+  "private": true,
+  "workspaces": [
+    "services/*",
+    "shared/*"
+  ],
+  "scripts": {
+    "build": "npm run build --workspace services/* && npm run build --workspace shared"
+  }
+}

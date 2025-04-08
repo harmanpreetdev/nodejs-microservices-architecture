@@ -1,0 +1,17 @@
+{
+    "compilerOptions": {
+      "outDir": "./dist",
+      "declaration": true, // Generate declaration files
+      "declarationMap": true, // Map .d.ts files for better debugging
+      "module": "ESNext",
+      "moduleResolution": "Node",
+      "target": "ES6",
+      "strict": true,
+      "esModuleInterop": true,
+      "resolveJsonModule": true,
+      "skipLibCheck": true,
+      "baseUrl": "./src"
+    },
+    "include": ["src/**/*.ts"] // Include all TS files
+  }
+  

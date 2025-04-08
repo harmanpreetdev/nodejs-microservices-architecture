@@ -5,12 +5,18 @@ interface IPage extends Document {
   route: string;
   title: string;
   description?: string;
-  metaTags?: string[]; // Array of meta tags for SEO
-  isActive: boolean; // Flag for soft-deletion
+  metaTags?: string[];
+  isActive: boolean;
+  projectId: mongoose.Schema.Types.ObjectId;
 }
 
 const PageSchema = new Schema<IPage>(
   {
+    projectId: {
+      type: Schema.Types.ObjectId,
+      ref: "Project",
+      required: [true, "Project ID is required"],
+    },
     name: {
       type: String,
       required: [true, "Page name is required"],

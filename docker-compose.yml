@@ -2,8 +2,8 @@ services:
   # User Service
   user-service:
     build:
-      context: ./services/user-service
-      dockerfile: Dockerfile
+      context: .
+      dockerfile: services/user-service/Dockerfile
     container_name: user-service
     ports:
       - "5001:5001"
@@ -18,8 +18,8 @@ services:
   # Project Service
   project-service:
     build:
-      context: ./services/project-service
-      dockerfile: Dockerfile
+      context: .
+      dockerfile: services/project-service/Dockerfile
     container_name: project-service
     ports:
       - "5002:5002"
@@ -29,15 +29,15 @@ services:
     env_file:
       - ./services/project-service/.env.dev
     volumes:
-      - ./services/project-service:/app/project-service
+      - ./services/project-service:/app/services/project-service
     networks:
       - api-network
 
   # Email Service
   email-service:
     build:
-      context: ./services/email-service
-      dockerfile: Dockerfile
+      context: .
+      dockerfile: services/email-service/Dockerfile
     container_name: email-service
     ports:
       - "5003:5003"

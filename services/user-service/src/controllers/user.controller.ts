@@ -1,6 +1,12 @@
 import { Request, Response } from "express";
 import { rabbitMQ } from "../services/rabbitmq.service";
 import User from "../models/user.model";
+import {
+  pathExists,
+  ensureDirectoryExists,
+  readFile,
+  writeFile,
+} from "@shared/utils";
 
 const register = async (req: Request, res: Response): Promise<any> => {
   const { name, email, password } = req.body;
